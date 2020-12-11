@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Linq;
 using System.Threading;
 
 namespace Core.Jobs
@@ -10,7 +12,10 @@ namespace Core.Jobs
         private List<Thread>        _list;
         private CancellationToken   token;
         
-        private ConcurrentQueue<JobInfo> Queue { get; set; }
+        private ConcurrentQueue<JobInfo>            Queue       { get; set; }
+        private ConcurrentDictionary<long, JobInfo> CurrentJobs { get; set; }
+        
+        
 
         public event Action<JobInfo> AddJobEvent;
         public event Action<JobInfo> StartJobEvent;
@@ -24,9 +29,11 @@ namespace Core.Jobs
 
         public JobWorker(CancellationToken token, int count = 4, ThreadPriority priority =ThreadPriority.Normal)
         {
-            NextJobId  = 1;
-            this.token = token;
-            Queue      = new ConcurrentQueue<JobInfo>();
+            NextJobId         = 1;
+            this.token        = token;
+            Queue             = new ConcurrentQueue<JobInfo>();
+            CurrentJobs       = new ConcurrentDictionary<long, JobInfo>();
+            _sendOnQueueEmpty = false;
             
             _list      = new List<Thread>();
             for (int i = 0; i < count; i++)
@@ -44,14 +51,21 @@ namespace Core.Jobs
 
         public JobInfo AddJob(JobInfo job)
         {
-            job.JobId     = NextJobId++;
-            job.JobResult = JobResult.InQueue;
+            _sendOnQueueEmpty = true;
+            job.JobId         = NextJobId++;
+            job.JobResult     = JobResult.InQueue;
             Queue.Enqueue(job);
             
             OnAddJobEvent(job);
             return job;
         }
-        
+
+        public List<JobInfo> GetCurrentJobs()
+        {
+            return CurrentJobs.Values.ToList();
+        }
+
+        private bool _sendOnQueueEmpty;
         private void MainWorker()
         {
             while (!token.IsCancellationRequested)
@@ -60,6 +74,7 @@ namespace Core.Jobs
                 {
                     try
                     {
+                        CurrentJobs.TryAdd(jobinfo.JobId, jobinfo);
                         jobinfo.TimeStart = DateTime.Now;
                         jobinfo.TimeEnd   = jobinfo.TimeStart;
                         jobinfo.JobResult = JobResult.Started;
@@ -71,12 +86,25 @@ namespace Core.Jobs
                         jobinfo.TimeEnd   = DateTime.Now;
                         jobinfo.JobResult = JobResult.Completed;
                         OnEndJobEvent(jobinfo);
+                        CurrentJobs.TryRemove(jobinfo.JobId, out _);
                     }
                     catch (Exception e)
                     {
                         jobinfo.JobResult    = JobResult.Error;
                         jobinfo.ErrorMessage = e.Message;
+                        CurrentJobs.TryRemove(jobinfo.JobId, out _);
                         OnErrorEvent(jobinfo);
+                    }
+                }
+                else
+                {
+                    if (CurrentJobs.IsEmpty)
+                    {
+                        if (_sendOnQueueEmpty)
+                        {
+                            OnQueueEmpty();
+                            _sendOnQueueEmpty = false;
+                        }
                     }
                 }
                 Thread.Sleep(10);
