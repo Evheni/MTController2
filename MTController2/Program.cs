@@ -1,36 +1,81 @@
-﻿using JobRun;
-using MTController2.Exp2;
+﻿using MTController2.Exp2;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
+using Core.Jobs;
 
 namespace MTController2
 {
     class Program
     {
-        static async void Run()
+        private async static void Run()
         {
+            var ct = new CancellationToken();
+
             Console.WriteLine("Hello World!");
 
-            var j = new JobWorker(1);
-            //await Task.Delay(1000);
-            for (int i = 0; i < 100; i++)
+            var j = new JobWorker(ct);
+
+            j.AddJobEvent   += info => Console.WriteLine($"Работа добавлена в очередь:{info.JobId} :{info.Name}");
+            j.StartJobEvent += info => Console.WriteLine($"Работа запущена:{info.JobId} :{info.Name} : {info.TimeStart}");
+            j.EndJobEvent   += info => Console.WriteLine($"Работа окончена:{info.JobId} :{info.Name} : {info.TimeEnd} : Elapsed {info.TimeWork}");
+
+            j.ErrorEvent += info => Console.WriteLine($"ERROR :{info.JobId} :{info.Name}:{info.ErrorMessage}");
+
+            j.QueueEmpty += () => Console.WriteLine($"Очередь работ пуста");
+
+
+
+
+            await Task.Delay(2000, ct);
+            
+            Console.WriteLine("Начало добавления работ");
+            for (int i = 0; i < 10; i++)
             {
-                var job = new TestJob();
-                job.SetSettings($"job-{i}");
+                var job = new JobInfo
+                          {
+                              Name     = $"TestPaused-{i}",
+                              JobClass = typeof(PausedJob),
+                              Settings = "str"
+                          };
+
                 j.AddJob(job);
             }
-            Console.WriteLine("hi");
-            Console.ReadLine();
+
+            var job1 = new JobInfo
+                      {
+                          Name     = $"TestError",
+                          JobClass = typeof(ErrorJob),
+                          Settings = "str"
+                      };
+
+            j.AddJob(job1);
+
+            var job2 = new JobInfo
+                       {
+                           Name     = $"TestInterface",
+                           JobClass = typeof(ErrorByInterfaceJob),
+                           Settings = "str"
+                       };
+
+            j.AddJob(job2);
 
 
         }
+
         static void Main(string[] args)
         {
-            //Run();
-            //return;
+           Run();
+           Console.ReadLine();
+            return;
+            
+            
+            
+            
             int iterationNum = 10;
-           
+            IProcessItemBehavior<string> processItemBehavior = new ProcessItemBehaviorJustSleep();
+                //new ProcessItemBehaviorForSimpleUrl();
             DateTime startDt;
 
             #region LimitedConcurrencyController
@@ -45,8 +90,8 @@ namespace MTController2
             Controller<string> mt = new LimitedConcurrencyController<string>
                 (
                     inputQueue,
-                    5,
-                    new ProcessItemBehaviorJustSleep()
+                    3,
+                    new ProcessItemBehaviorForSimpleUrl()
                 );
 
 
@@ -63,14 +108,14 @@ namespace MTController2
 
             #region No thread test
 
-            //startDt = DateTime.Now;
+            startDt = DateTime.Now;
 
-            //for (int i = 0; i < iterationNum; i++)
-            //{
-            //    processItemBehavior.Process(i.ToString());
-            //}
+            for (int i = 0; i < iterationNum; i++)
+            {
+                processItemBehavior.Process(i.ToString());
+            }
 
-            //Console.WriteLine("No thread test: " + Math.Round((DateTime.Now - startDt).TotalMilliseconds) + " ms");
+            Console.WriteLine("No thread test: " + Math.Round((DateTime.Now - startDt).TotalMilliseconds) + " ms");
 
             #endregion
 
@@ -78,9 +123,11 @@ namespace MTController2
 
             Console.ReadKey();
         }
+
     }
 
-    public class TestJob : IJob
+    
+    public class PausedJob : IJob
     {
         private string _settings;
 
@@ -89,6 +136,49 @@ namespace MTController2
             _settings = settings as string;
         }
 
-        public void Execute(string s) => Console.WriteLine($"{s}:{_settings}");
+        public object Execute()
+        {
+            Thread.Sleep(1000);
+            return true;
+        }
+    }
+
+    public class ErrorJob : IJob
+    {
+        private string _settings;
+
+        public void SetSettings(object settings)
+        {
+            _settings = settings as string;
+        }
+
+        public object Execute()
+        {
+            var a = 0;
+            var b = 1;
+            var c = b / a;
+            
+            return true;
+        }
+    }
+
+
+    public class ErrorByInterfaceJob 
+    {
+        private string _settings;
+
+        public void SetSettings(object settings)
+        {
+            _settings = settings as string;
+        }
+
+        public object Execute()
+        {
+            var a = 0;
+            var b = 1;
+            var c = b / a;
+
+            return true;
+        }
     }
 }

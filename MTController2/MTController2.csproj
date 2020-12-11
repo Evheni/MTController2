@@ -11,4 +11,8 @@
     <None Remove="Exp1\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\jobs\jobs.csproj" />
+  </ItemGroup>
+
 </Project>
