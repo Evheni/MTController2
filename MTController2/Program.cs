@@ -1,4 +1,5 @@
-﻿using MTController2.Exp2;
+﻿using JobRun;
+using MTController2.Exp2;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -7,8 +8,27 @@ namespace MTController2
 {
     class Program
     {
+        static async void Run()
+        {
+            Console.WriteLine("Hello World!");
+
+            var j = new JobWorker(1);
+            //await Task.Delay(1000);
+            for (int i = 0; i < 100; i++)
+            {
+                var job = new TestJob();
+                job.SetSettings($"job-{i}");
+                j.AddJob(job);
+            }
+            Console.WriteLine("hi");
+            Console.ReadLine();
+
+
+        }
         static void Main(string[] args)
         {
+            Run();
+            return;
             int iterationNum = 10;
             IProcessItemBehavior<string> processItemBehavior = new ProcessItemBehaviorJustSleep();
                 //new ProcessItemBehaviorForSimpleUrl();
@@ -59,5 +79,17 @@ namespace MTController2
 
             Console.ReadKey();
         }
+    }
+
+    public class TestJob : IJob
+    {
+        private string _settings;
+
+        public void SetSettings(object settings)
+        {
+            _settings = settings as string;
+        }
+
+        public void Execute(string s) => Console.WriteLine($"{s}:{_settings}");
     }
 }
