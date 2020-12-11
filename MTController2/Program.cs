@@ -27,11 +27,10 @@ namespace MTController2
         }
         static void Main(string[] args)
         {
-            Run();
-            return;
+            //Run();
+            //return;
             int iterationNum = 10;
-            IProcessItemBehavior<string> processItemBehavior = new ProcessItemBehaviorJustSleep();
-                //new ProcessItemBehaviorForSimpleUrl();
+           
             DateTime startDt;
 
             #region LimitedConcurrencyController
@@ -46,8 +45,8 @@ namespace MTController2
             Controller<string> mt = new LimitedConcurrencyController<string>
                 (
                     inputQueue,
-                    3,
-                    new ProcessItemBehaviorForSimpleUrl()
+                    5,
+                    new ProcessItemBehaviorJustSleep()
                 );
 
 
@@ -64,14 +63,14 @@ namespace MTController2
 
             #region No thread test
 
-            startDt = DateTime.Now;
+            //startDt = DateTime.Now;
 
-            for (int i = 0; i < iterationNum; i++)
-            {
-                processItemBehavior.Process(i.ToString());
-            }
+            //for (int i = 0; i < iterationNum; i++)
+            //{
+            //    processItemBehavior.Process(i.ToString());
+            //}
 
-            Console.WriteLine("No thread test: " + Math.Round((DateTime.Now - startDt).TotalMilliseconds) + " ms");
+            //Console.WriteLine("No thread test: " + Math.Round((DateTime.Now - startDt).TotalMilliseconds) + " ms");
 
             #endregion
 

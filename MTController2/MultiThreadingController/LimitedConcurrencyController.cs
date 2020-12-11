@@ -84,10 +84,10 @@ namespace MTController2.Exp2
         {
             while(_jobs.Count>0)
             {
-                _jobs.TryDequeue(out T job);
-
                 Interlocked.Increment(ref _taskCounter);
 
+                _jobs.TryDequeue(out T job);
+                
                 Task thisTask =
                     _localTaskFactory.StartNew(ProcessItemAsObject, job, _moduleCancellationToken.Token);
 

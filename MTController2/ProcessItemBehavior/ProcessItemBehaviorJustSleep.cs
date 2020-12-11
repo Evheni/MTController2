@@ -9,7 +9,10 @@ namespace MTController2.Exp2
     {
         public void Process(string job)
         {
+            
             Thread.Sleep(500);
+            Console.WriteLine($"job {job} after sleep");
+
         }
     }
 }
