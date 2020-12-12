@@ -17,21 +17,17 @@ namespace MTController2
 
             var j = new JobWorker(ct);
 
-            j.AddJobEvent   += info => Console.WriteLine($"Работа добавлена в очередь:{info.JobId} :{info.Name}");
-            j.StartJobEvent += info => Console.WriteLine($"Работа запущена:{info.JobId} :{info.Name} : {info.TimeStart}");
-            j.EndJobEvent   += info => Console.WriteLine($"Работа окончена:{info.JobId} :{info.Name} : {info.TimeEnd} : Elapsed {info.TimeWork}");
+            //j.AddJobEvent   += info => Console.WriteLine($"Работа добавлена в очередь:{info.JobId} :{info.Name}");
+            //j.StartJobEvent += info => Console.WriteLine($"Работа запущена:{info.JobId} :{info.Name} : {info.TimeStart}");
+            //j.EndJobEvent   += info => Console.WriteLine($"Работа окончена:{info.JobId} :{info.Name} : {info.TimeEnd} : Elapsed {info.TimeWork}");
 
             j.ErrorEvent += info => Console.WriteLine($"ERROR :{info.JobId} :{info.Name}:{info.ErrorMessage}");
-
             j.QueueEmpty += () => Console.WriteLine($"Очередь работ пуста");
 
-
-
-
-            await Task.Delay(2000, ct);
+           // await Task.Delay(2000, ct);
             
             Console.WriteLine("Начало добавления работ");
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 var job = new JobInfo
                           {
@@ -138,7 +134,7 @@ namespace MTController2
 
         public object Execute()
         {
-            Thread.Sleep(1000);
+            Thread.Sleep(10);
             return true;
         }
     }
