@@ -16,8 +16,8 @@ namespace Core.Jobs
 
 
         /*public event Action<JobInfo> AddJobEvent;
-        public event Action<JobInfo> StartJobEvent;
-        public event Action<JobInfo> EndJobEvent;*/
+        public event Action<JobInfo> StartJobEvent;*/
+        public event Action<JobInfo> EndJobEvent;
 
         public event Action<JobInfo> ErrorEvent;
         public event Action          QueueEmpty;
@@ -75,7 +75,7 @@ namespace Core.Jobs
 
                         jobinfo.TimeEnd   = DateTime.Now;
                         jobinfo.JobResult = JobResult.Completed;
-                        //OnEndJobEvent(jobinfo);
+                        OnEndJobEvent(jobinfo);
 
                     }
                     catch (Exception e)
@@ -112,11 +112,12 @@ namespace Core.Jobs
             QueueEmpty?.Invoke();
         }
 
-        /*protected virtual void OnEndJobEvent(JobInfo obj)
-        {
+       protected virtual void OnEndJobEvent(JobInfo obj)
+       {
+           Console.WriteLine($"OnEndJobEvent():{Thread.CurrentThread.ManagedThreadId}");
             EndJobEvent?.Invoke(obj);
         }
-
+ /*
         protected virtual void OnStartJobEvent(JobInfo obj)
         {
             StartJobEvent?.Invoke(obj);

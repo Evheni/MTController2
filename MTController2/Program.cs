@@ -14,20 +14,25 @@ namespace MTController2
             var ct = new CancellationToken();
 
             Console.WriteLine("Hello World!");
+            Console.WriteLine($"Run():{Thread.CurrentThread.ManagedThreadId}");
 
             var j = new JobWorker(ct);
 
             //j.AddJobEvent   += info => Console.WriteLine($"Работа добавлена в очередь:{info.JobId} :{info.Name}");
             //j.StartJobEvent += info => Console.WriteLine($"Работа запущена:{info.JobId} :{info.Name} : {info.TimeStart}");
-            //j.EndJobEvent   += info => Console.WriteLine($"Работа окончена:{info.JobId} :{info.Name} : {info.TimeEnd} : Elapsed {info.TimeWork}");
+            j.EndJobEvent   += info => Console.WriteLine($"EndJobEvent:{info.Result as string}");
 
             j.ErrorEvent += info => Console.WriteLine($"ERROR :{info.JobId} :{info.Name}:{info.ErrorMessage}");
             j.QueueEmpty += () => Console.WriteLine($"Очередь работ пуста");
+            
+            
+            
 
-           // await Task.Delay(2000, ct);
+            await Task.Delay(1000, ct);
             
             Console.WriteLine("Начало добавления работ");
-            for (int i = 0; i < 1000; i++)
+            
+            for (int i = 0; i < 1; i++)
             {
                 var job = new JobInfo
                           {
@@ -38,7 +43,7 @@ namespace MTController2
 
                 j.AddJob(job);
             }
-
+            /*
             var job1 = new JobInfo
                       {
                           Name     = $"TestError",
@@ -56,7 +61,7 @@ namespace MTController2
                        };
 
             j.AddJob(job2);
-
+            */
 
         }
 
@@ -134,8 +139,10 @@ namespace MTController2
 
         public object Execute()
         {
+            Console.WriteLine($"Execute():{Thread.CurrentThread.ManagedThreadId}");
+            
             Thread.Sleep(10);
-            return true;
+            return Thread.CurrentThread.ManagedThreadId.ToString();
         }
     }
 
