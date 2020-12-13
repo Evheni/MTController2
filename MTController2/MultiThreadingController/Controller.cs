@@ -24,6 +24,8 @@ namespace MTController2.Exp2
 
         public abstract void WaitAllFinished();
 
+        public event Action AllFinishedEvent;
+
         protected void ProcessItem(T job)
         {
             _processItemBehavior.Process(job);
