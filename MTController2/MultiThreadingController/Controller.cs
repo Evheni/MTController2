@@ -24,11 +24,29 @@ namespace MTController2.Exp2
 
         public abstract void WaitAllFinished();
 
-        public event Action AllFinishedEvent;
+        public abstract void WaitAllFinishedAsync();
+
+        public event EventHandler<AllFinishedEventArgs> AllFinished;
+
+        protected virtual void OnAllFinished(AllFinishedEventArgs e)
+        {
+            AllFinished?.Invoke(this,e);
+        }
 
         protected void ProcessItem(T job)
         {
             _processItemBehavior.Process(job);
+        }
+    }
+
+    public class AllFinishedEventArgs:EventArgs
+    {
+        public bool IsSuccess { get; private set; }
+        public Exception Error { get; private set; }
+        public AllFinishedEventArgs(bool isSuccess, Exception exp = null)
+        {
+            IsSuccess = isSuccess;
+            Error = exp;
         }
     }
 }

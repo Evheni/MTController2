@@ -66,14 +66,14 @@ namespace MTController2
 
         static void Main(string[] args)
         {
-           Run();
-           Console.ReadLine();
+            Run();
+            Console.ReadLine();
             return;
-            
-            
-            
-            
-            int iterationNum = 10;
+
+
+
+
+            int iterationNum = 5000;
             IProcessItemBehavior<string> processItemBehavior = new ProcessItemBehaviorJustSleep();
                 //new ProcessItemBehaviorForSimpleUrl();
             DateTime startDt;
@@ -90,16 +90,17 @@ namespace MTController2
             Controller<string> mt = new LimitedConcurrencyController<string>
                 (
                     inputQueue,
-                    3,
+                    50,
                     new ProcessItemBehaviorJustSleep()
                 );
 
 
             startDt = DateTime.Now;
 
+            mt.AllFinished += Mt_AllFinished;
             mt.Launch();
 
-            mt.WaitAllFinished();
+            mt.WaitAllFinishedAsync();
 
             Console.WriteLine("LimitedConcurrencyController test: " + Math.Round((DateTime.Now - startDt).TotalMilliseconds) + " ms");
 
@@ -108,14 +109,14 @@ namespace MTController2
 
             #region No thread test
 
-            startDt = DateTime.Now;
+            //startDt = DateTime.Now;
 
-            for (int i = 0; i < iterationNum; i++)
-            {
-                processItemBehavior.Process(i.ToString());
-            }
+            //for (int i = 0; i < iterationNum; i++)
+            //{
+            //    processItemBehavior.Process(i.ToString());
+            //}
 
-            Console.WriteLine("No thread test: " + Math.Round((DateTime.Now - startDt).TotalMilliseconds) + " ms");
+            //Console.WriteLine("No thread test: " + Math.Round((DateTime.Now - startDt).TotalMilliseconds) + " ms");
 
             #endregion
 
@@ -124,6 +125,10 @@ namespace MTController2
             Console.ReadKey();
         }
 
+        private static void Mt_AllFinished(object sender, AllFinishedEventArgs e)
+        {
+            Console.WriteLine("Mt_AllFinished");
+        }
     }
 
     

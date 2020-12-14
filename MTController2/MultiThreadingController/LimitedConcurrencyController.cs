@@ -45,12 +45,14 @@ namespace MTController2.Exp2
                         Thread.Sleep(250);
                         continue;
                     }
-
+                    OnAllFinished(new AllFinishedEventArgs(true));
                     break;
                 }
                 catch (Exception exp)
                 {
                     Type expType = exp.GetType();
+                    
+                    OnAllFinished(new AllFinishedEventArgs(false, exp));
 
                     #region If task cancelled exception, just break cycle
 
@@ -61,8 +63,15 @@ namespace MTController2.Exp2
                     }
 
                     #endregion
+
+                    
                 }
             }
+        }
+
+        public override async void WaitAllFinishedAsync()
+        {
+            await Task.Run(WaitAllFinished);
         }
 
         void ProcessItemAsObject(object item)
