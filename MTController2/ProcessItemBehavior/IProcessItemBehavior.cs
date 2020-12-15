@@ -1,9 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using MTController2.JobInfo;
+using System.Threading.Tasks;
 
 namespace MTController2.Exp2
 {
-    public interface IProcessItemBehavior <T>
+    public interface IProcessItemBehavior 
     {
-        void Process(T job);
+        void Process(IJobInfo job);
     }
 }

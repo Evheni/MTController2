@@ -1,15 +1,16 @@
-﻿using System;
+﻿using MTController2.JobInfo;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace MTController2.Exp2
 {
-    class ProcessItemBehaviorForSimpleUrl : IProcessItemBehavior<string>
+    public class ProcessItemBehaviorForSimpleUrl : IProcessItemBehavior
     {
-        public void Process(string job)
+        public void Process(IJobInfo job)
         {
-            Console.WriteLine(job);
+            Console.WriteLine((job as StringJobInfo).Job);
 
         }
     }

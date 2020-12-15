@@ -1,1 +1,3 @@
-﻿
+﻿IQueueBased
+Queue itself
+check queue is empty

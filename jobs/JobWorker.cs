@@ -114,7 +114,7 @@ namespace Core.Jobs
 
        protected virtual void OnEndJobEvent(JobInfo obj)
        {
-           Console.WriteLine($"OnEndJobEvent():{Thread.CurrentThread.ManagedThreadId}");
+           //Console.WriteLine($"OnEndJobEvent():{Thread.CurrentThread.ManagedThreadId}");
             EndJobEvent?.Invoke(obj);
         }
  /*

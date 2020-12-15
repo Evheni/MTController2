@@ -1,22 +1,31 @@
-﻿using System;
+﻿using MTController2.JobInfo;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MTController2.Exp2
 {
-    public abstract class Controller <T>
+    public abstract class Controller
     {
+        //protected ConcurrentQueue<IJobInfo> _queue { get; set; }
         protected int _threadNumber;
-        IProcessItemBehavior<T> _processItemBehavior;
-        public Controller(int threadNumber, IProcessItemBehavior<T> processItemBehavior)
+        protected CancellationTokenSource _moduleCancellationToken;
+
+        public Controller(int threadNumber)
         {
             _threadNumber = threadNumber;
-            _processItemBehavior = processItemBehavior;
+            _moduleCancellationToken = new CancellationTokenSource();
         }
 
         public abstract void Launch();
 
-        public abstract void Stop();
+        public virtual void Stop()
+        {
+            _moduleCancellationToken.Cancel();
+        }
 
         public abstract void Pause();
 
@@ -24,18 +33,16 @@ namespace MTController2.Exp2
 
         public abstract void WaitAllFinished();
 
-        public abstract void WaitAllFinishedAsync();
+        public virtual async void WaitAllFinishedAsync()
+        {
+            await Task.Run(WaitAllFinished);
+        }
 
         public event EventHandler<AllFinishedEventArgs> AllFinished;
 
         protected virtual void OnAllFinished(AllFinishedEventArgs e)
         {
             AllFinished?.Invoke(this,e);
-        }
-
-        protected void ProcessItem(T job)
-        {
-            _processItemBehavior.Process(job);
         }
     }
 

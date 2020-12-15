@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Core.Jobs;
+using MTController2.JobInfo;
+using MTController2.MultiThreadingController;
 
-namespace MTController2
+namespace TestAppConsole
 {
     class Program
     {
@@ -20,26 +22,23 @@ namespace MTController2
 
             //j.AddJobEvent   += info => Console.WriteLine($"Работа добавлена в очередь:{info.JobId} :{info.Name}");
             //j.StartJobEvent += info => Console.WriteLine($"Работа запущена:{info.JobId} :{info.Name} : {info.TimeStart}");
-            j.EndJobEvent   += info => Console.WriteLine($"EndJobEvent:{info.Result as string}");
+            //j.EndJobEvent   += info => Console.WriteLine($"EndJobEvent:{info.Result as string}");
 
-            j.ErrorEvent += info => Console.WriteLine($"ERROR :{info.JobId} :{info.Name}:{info.ErrorMessage}");
-            j.QueueEmpty += () => Console.WriteLine($"Очередь работ пуста");
-            
-            
-            
+            //j.ErrorEvent += info => Console.WriteLine($"ERROR :{info.JobId} :{info.Name}:{info.ErrorMessage}");
+            j.QueueEmpty += () => Console.WriteLine($"Queue is empty");
 
-            await Task.Delay(1000, ct);
-            
-            Console.WriteLine("Начало добавления работ");
-            
-            for (int i = 0; i < 1; i++)
+            //await Task.Delay(1000, ct);
+
+            Console.WriteLine("Start adding jobs");
+
+            for (int i = 0; i < 10000; i++)
             {
                 var job = new JobInfo
-                          {
-                              Name     = $"TestPaused-{i}",
-                              JobClass = typeof(PausedJob),
-                              Settings = "str"
-                          };
+                {
+                    Name = $"TestPaused-{i}",
+                    JobClass = typeof(PausedJob),
+                    Settings = "str"
+                };
 
                 j.AddJob(job);
             }
@@ -67,34 +66,30 @@ namespace MTController2
 
         static void Main(string[] args)
         {
-           Run();
-           Console.ReadLine();
-            return;
+            //Run();
+            //Console.ReadLine();
+            //return;
             
+            int iterationNum = 100;
             
-            
-            
-            int iterationNum = 10;
-            IProcessItemBehavior<string> processItemBehavior = new ProcessItemBehaviorJustSleep();
-                //new ProcessItemBehaviorForSimpleUrl();
             DateTime startDt;
 
-            #region LimitedConcurrencyController
+            #region QueueBasedController
 
-            List<string> inputQueue = new List<string>();
+            List<IJobInfo> inputQueue = new List<IJobInfo>();
 
             for (int i = 0; i < iterationNum; i++)
             {
-                inputQueue.Add(i.ToString());
+                inputQueue.Add(new StringJobInfo(i.ToString()));
             }
 
-            Controller<string> mt = new LimitedConcurrencyController<string>
+            QueueBasedController mt = new LimitedConcurrencyController
                 (
-                    inputQueue,
-                    3,
-                    new ProcessItemBehaviorForSimpleUrl()
+                    new ProcessItemBehaviorJustSleep(),
+                    50                    
                 );
 
+            mt.FillQueue(inputQueue);
 
             startDt = DateTime.Now;
 
@@ -102,21 +97,21 @@ namespace MTController2
 
             mt.WaitAllFinished();
 
-            Console.WriteLine("LimitedConcurrencyController test: " + Math.Round((DateTime.Now - startDt).TotalMilliseconds) + " ms");
+            //GC.GetTotalMemory(true)
+            Console.WriteLine($"{mt.GetType()} test: " + Math.Round((DateTime.Now - startDt).TotalMilliseconds) + " ms");
 
             #endregion
 
-
             #region No thread test
 
-            startDt = DateTime.Now;
+            //startDt = DateTime.Now;
 
-            for (int i = 0; i < iterationNum; i++)
-            {
-                processItemBehavior.Process(i.ToString());
-            }
+            //for (int i = 0; i < iterationNum; i++)
+            //{
+            //    processItemBehavior.Process(i.ToString());
+            //}
 
-            Console.WriteLine("No thread test: " + Math.Round((DateTime.Now - startDt).TotalMilliseconds) + " ms");
+            //Console.WriteLine("No thread test: " + Math.Round((DateTime.Now - startDt).TotalMilliseconds) + " ms");
 
             #endregion
 
@@ -127,7 +122,7 @@ namespace MTController2
 
     }
 
-    
+
     public class PausedJob : IJob
     {
         private string _settings;
@@ -139,8 +134,8 @@ namespace MTController2
 
         public object Execute()
         {
-            Console.WriteLine($"Execute():{Thread.CurrentThread.ManagedThreadId}");
-            
+            Console.WriteLine($"Execute(), thread id{Thread.CurrentThread.ManagedThreadId}");
+
             Thread.Sleep(10);
             return Thread.CurrentThread.ManagedThreadId.ToString();
         }
@@ -160,13 +155,13 @@ namespace MTController2
             var a = 0;
             var b = 1;
             var c = b / a;
-            
+
             return true;
         }
     }
 
 
-    public class ErrorByInterfaceJob 
+    public class ErrorByInterfaceJob
     {
         private string _settings;
 
@@ -185,3 +180,5 @@ namespace MTController2
         }
     }
 }
+
+
