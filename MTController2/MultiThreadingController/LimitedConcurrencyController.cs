@@ -1,5 +1,7 @@
 ﻿using MTController2.JobInfo;
 using MTController2.MultiThreadingController;
+using MTController2.OptionClasses;
+using MTController2.ProcessItemBehaviorNS;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -17,8 +19,8 @@ namespace MTController2.Exp2
         private int _taskCounter;
 
         
-        public LimitedConcurrencyController(IProcessItemBehavior processItemBehavior, int threadNumber)
-            : base(processItemBehavior, threadNumber)
+        public LimitedConcurrencyController(QueueBasedProcessItemBehavior processItemBehavior, int threadNumber, Options options)
+            : base(processItemBehavior, threadNumber, options)
         {
             _localTaskFactory = new TaskFactory(new LimitedConcurrencyLevelTaskScheduler(threadNumber));
             _executedTasks = new List<Task>();
@@ -62,8 +64,6 @@ namespace MTController2.Exp2
                     }
 
                     #endregion
-
-                    
                 }
             }
         }
@@ -79,9 +79,8 @@ namespace MTController2.Exp2
 
             Interlocked.Decrement(ref _taskCounter);
         }
-   
 
-        public override void Launch()
+        protected override void LaunchSpecific()
         {
             while(_queue.Count>0)
             {
@@ -90,22 +89,21 @@ namespace MTController2.Exp2
                 _queue.TryDequeue(out IJobInfo job);
                 
                 Task thisTask =
-                    _localTaskFactory.StartNew(ProcessItemAsObject, job, _moduleCancellationToken.Token);
+                    _localTaskFactory.StartNew(ProcessItemAsObject, job, _stopCancellationTokenSource.Token);
 
                 _executedTasks.Add(thisTask);
             }
             
         }
 
-        public override void Pause()
+        protected override void InitSpecific()
         {
             throw new NotImplementedException();
         }
 
-        public override void Resume()
+        protected override void DeinitSpecific()
         {
             throw new NotImplementedException();
         }
-
     }
 }

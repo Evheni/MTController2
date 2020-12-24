@@ -1,5 +1,7 @@
 ﻿using MTController2.Exp2;
 using MTController2.JobInfo;
+using MTController2.OptionClasses;
+using MTController2.ProcessItemBehaviorNS;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -16,8 +18,8 @@ namespace MTController2.MultiThreadingController
         bool _sendOnQueueEmpty = false;
 
 
-        public JobWorkerController(IProcessItemBehavior processItemBehavior, int threadNumber)
-            : base(processItemBehavior, threadNumber)
+        public JobWorkerController(QueueBasedProcessItemBehavior processItemBehavior, int threadNumber, Options options)
+            : base(processItemBehavior, threadNumber, options)
         {
             
         }
@@ -25,7 +27,7 @@ namespace MTController2.MultiThreadingController
 
         private void MainWorker()
         {
-            while (!_moduleCancellationToken.IsCancellationRequested)
+            while (!_stopCancellationTokenSource.IsCancellationRequested)
             {
                 if (_queue.TryDequeue(out var jobinfo))
                 {
@@ -62,7 +64,7 @@ namespace MTController2.MultiThreadingController
                 Thread.Sleep(10);
             }
         }
-        public override void Launch()
+        protected override void LaunchSpecific()
         {
 
             _list = new List<Thread>();
@@ -81,15 +83,7 @@ namespace MTController2.MultiThreadingController
 
         }
 
-        public override void Pause()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Resume()
-        {
-            throw new NotImplementedException();
-        }
+       
 
         public override void WaitAllFinished()
         {

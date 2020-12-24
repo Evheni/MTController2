@@ -6,101 +6,50 @@ using System.Threading.Tasks;
 using Core.Jobs;
 using MTController2.JobInfo;
 using MTController2.MultiThreadingController;
+using MTController2.OptionClasses;
+using System.Diagnostics;
 
 namespace TestAppConsole
 {
     class Program
     {
-        private async static void Run()
-        {
-            var ct = new CancellationToken();
-
-            Console.WriteLine("Hello World!");
-            Console.WriteLine($"Run():{Thread.CurrentThread.ManagedThreadId}");
-
-            var j = new JobWorker(ct);
-
-            //j.AddJobEvent   += info => Console.WriteLine($"Работа добавлена в очередь:{info.JobId} :{info.Name}");
-            //j.StartJobEvent += info => Console.WriteLine($"Работа запущена:{info.JobId} :{info.Name} : {info.TimeStart}");
-            //j.EndJobEvent   += info => Console.WriteLine($"EndJobEvent:{info.Result as string}");
-
-            //j.ErrorEvent += info => Console.WriteLine($"ERROR :{info.JobId} :{info.Name}:{info.ErrorMessage}");
-            j.QueueEmpty += () => Console.WriteLine($"Queue is empty");
-
-            //await Task.Delay(1000, ct);
-
-            Console.WriteLine("Start adding jobs");
-
-            for (int i = 0; i < 10000; i++)
-            {
-                var job = new JobInfo
-                {
-                    Name = $"TestPaused-{i}",
-                    JobClass = typeof(PausedJob),
-                    Settings = "str"
-                };
-
-                j.AddJob(job);
-            }
-            /*
-            var job1 = new JobInfo
-                      {
-                          Name     = $"TestError",
-                          JobClass = typeof(ErrorJob),
-                          Settings = "str"
-                      };
-
-            j.AddJob(job1);
-
-            var job2 = new JobInfo
-                       {
-                           Name     = $"TestInterface",
-                           JobClass = typeof(ErrorByInterfaceJob),
-                           Settings = "str"
-                       };
-
-            j.AddJob(job2);
-            */
-
-        }
-
         static void Main(string[] args)
         {
-            //Run();
-            //Console.ReadLine();
-            //return;
-            
-            int iterationNum = 100;
-            
-            DateTime startDt;
+          
+            int testQueueSize = 10000;
 
-            #region QueueBasedController
+            Stopwatch stopwatch = new Stopwatch();
 
+            //Init input job queue
             List<IJobInfo> inputQueue = new List<IJobInfo>();
-
-            for (int i = 0; i < iterationNum; i++)
+            for (int i = 0; i < testQueueSize; i++)
             {
                 inputQueue.Add(new StringJobInfo(i.ToString()));
             }
 
-            QueueBasedController mt = new LimitedConcurrencyController
+            //Create controller object passing job process behavior, number of threads to execute jobs, options to init controller
+            QueueBasedController mt = new LimitedConcurrencyController //new JobWorkerController//
                 (
-                    new ProcessItemBehaviorJustSleep(),
-                    50                    
+                    new ProcessItemBehaviorJustSleep(new JobProcessorOptions()),
+                    50,
+                    new ControllerOptions()
                 );
 
+            //Fill job queue
             mt.FillQueue(inputQueue);
 
-            startDt = DateTime.Now;
+            stopwatch.Start();
 
+            //Launch job execution
             mt.Launch();
 
+            //Wait for all jobs to be finished
+            //#? is that ok if we launch it from extra thread
             mt.WaitAllFinished();
 
-            //GC.GetTotalMemory(true)
-            Console.WriteLine($"{mt.GetType()} test: " + Math.Round((DateTime.Now - startDt).TotalMilliseconds) + " ms");
-
-            #endregion
+            stopwatch.Stop();
+            
+            Console.WriteLine($"{mt.GetType()} test: {stopwatch.ElapsedMilliseconds} ms");
 
             #region No thread test
 
@@ -115,70 +64,11 @@ namespace TestAppConsole
 
             #endregion
 
-
-
             Console.ReadKey();
         }
 
     }
 
-
-    public class PausedJob : IJob
-    {
-        private string _settings;
-
-        public void SetSettings(object settings)
-        {
-            _settings = settings as string;
-        }
-
-        public object Execute()
-        {
-            Console.WriteLine($"Execute(), thread id{Thread.CurrentThread.ManagedThreadId}");
-
-            Thread.Sleep(10);
-            return Thread.CurrentThread.ManagedThreadId.ToString();
-        }
-    }
-
-    public class ErrorJob : IJob
-    {
-        private string _settings;
-
-        public void SetSettings(object settings)
-        {
-            _settings = settings as string;
-        }
-
-        public object Execute()
-        {
-            var a = 0;
-            var b = 1;
-            var c = b / a;
-
-            return true;
-        }
-    }
-
-
-    public class ErrorByInterfaceJob
-    {
-        private string _settings;
-
-        public void SetSettings(object settings)
-        {
-            _settings = settings as string;
-        }
-
-        public object Execute()
-        {
-            var a = 0;
-            var b = 1;
-            var c = b / a;
-
-            return true;
-        }
-    }
 }
 
 
