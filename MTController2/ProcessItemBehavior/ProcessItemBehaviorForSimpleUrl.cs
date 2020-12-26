@@ -17,7 +17,10 @@ namespace MTController2.Exp2
         public override void Process(IJobInfo job)
         {
             Console.WriteLine((job as StringJobInfo).Job);
-
+            //load
+            //extract links
+            //extract data
+            //export
         }
     }
 }

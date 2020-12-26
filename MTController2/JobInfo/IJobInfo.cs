@@ -6,5 +6,6 @@ namespace MTController2.JobInfo
 {
     public interface IJobInfo
     {
+    //    void Process();
     }
 }

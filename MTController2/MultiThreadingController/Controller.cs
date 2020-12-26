@@ -12,8 +12,8 @@ namespace MTController2.Exp2
 {
     /// <summary>
     /// Class describing task processing behavior
-    /// e.g. managing queue with tasks,
-    ///organizing multithreaded task processing
+    /// e.g. managing queue with tasks (enqueue tasks, dequeue tasks),
+    /// organizing multithreaded task processing
     /// </summary>
     public abstract class Controller
     {

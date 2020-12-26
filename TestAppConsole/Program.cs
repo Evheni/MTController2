@@ -20,7 +20,7 @@ namespace TestAppConsole
 
             Stopwatch stopwatch = new Stopwatch();
 
-            //Init input job queue
+            //Init input job queue (which will be processed IN USING THE SAME BEHAVIOR)
             List<IJobInfo> inputQueue = new List<IJobInfo>();
             for (int i = 0; i < testQueueSize; i++)
             {
@@ -30,17 +30,17 @@ namespace TestAppConsole
             //Create controller object passing job process behavior, number of threads to execute jobs, options to init controller
             QueueBasedController mt = new LimitedConcurrencyController //new JobWorkerController//
                 (
-                    new ProcessItemBehaviorJustSleep(new JobProcessorOptions()),
+                    new ProcessItemBehaviorJustSleep(new JobProcessorOptions()),//options for particular item
                     50,
-                    new ControllerOptions()
+                    new ControllerOptions() //options for general controller processor (not for particular item)
                 );
 
-            //Fill job queue
+            //Fill controller job queue
             mt.FillQueue(inputQueue);
 
             stopwatch.Start();
 
-            //Launch job execution
+            //Launch job execution by controller
             mt.Launch();
 
             //Wait for all jobs to be finished

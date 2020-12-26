@@ -18,5 +18,10 @@ namespace MTController2.JobInfo
         {
             _job = job;
         }
+
+        //public void Process()
+        //{
+
+        //}
     }
 }
