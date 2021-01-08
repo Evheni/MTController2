@@ -1,5 +1,6 @@
 ﻿using MTController2.ExtraClasses;
 using MTController2.JobInfo;
+using MTController2.MultiThreadingController;
 using MTController2.OptionClasses;
 using System;
 using System.Collections.Concurrent;
@@ -38,7 +39,7 @@ namespace MTController2.Exp2
         protected bool _pauseSignalOn;
 
         /// <summary>
-        /// handling current controller state: INITIALIZATION, WORKING, STOPPING, PAUSED, PAUSING, DEINITIALIZATION
+        /// storing current controller state: INITIALIZATION, WORKING, STOPPING, PAUSED, PAUSING, DEINITIALIZATION
         /// </summary>
         protected ControllerStateManager _controllerStateManager;
       
@@ -56,18 +57,59 @@ namespace MTController2.Exp2
             AllFinished?.Invoke(this, e);
         }
 
+        private ProcessInfo mProcessInfo;
+
+        public ProcessInfo ProcessInfo
+        {
+            get { return mProcessInfo; }
+            set { mProcessInfo = value; }
+        }
+
+        /// <summary>
+        /// queue storage
+        /// </summary>
+        protected ConcurrentQueue<IJobInfo> _queue { get; set; }
+
+        /// <summary>
+        /// behavior for processing every single job from queue
+        /// Strategy pattern is used, so we can 
+        /// </summary>
+        protected JobProcessBehavior _processItemBehavior;
+
+        /// <summary>
+        /// counter to track number of items, which are being processed by threads right in the current moment
+        /// </summary>
+        protected int _currentlyProcessingItemCount;
+        /// <summary>
+        /// counter to track number of items, which processing is already paused considering _pauseSignalOn state
+        /// it helps to distinguish between PAUSING and PAUSED controller states
+        /// </summary>
+        protected int _pausedProcessingItemCount;
+
+        /// <summary>
+        /// locker to synchronize _pausedProcessingItemCount access
+        /// </summary>
+        protected object _pauseLockerObject = new object();
+
         /// <summary>
         /// Initializes a new instance of Controller
         /// </summary>
         /// <param name="threadNumber">number of threads to process jobs simultaneously</param>
         /// <param name="options">options for initialization, e.g. database requisites etc.</param>
-        public Controller(int threadNumber, Options options)
+        public Controller(JobProcessBehavior processItemBehavior, int threadNumber, Options options)
         {
             _threadNumber = threadNumber;
             _options = options;
             _stopCancellationTokenSource = new CancellationTokenSource();
             _pauseSignalOn = false;
-            _controllerStateManager = new ControllerStateManager();        
+            _controllerStateManager = new ControllerStateManager();
+
+            _processItemBehavior = processItemBehavior;
+            _queue = new ConcurrentQueue<IJobInfo>();
+
+            _processItemBehavior.AddToQueue += _processItemBehavior_AddToQueue;
+            mProcessInfo = new ProcessInfo();
+
         }
 
         /// <summary>
@@ -135,10 +177,10 @@ namespace MTController2.Exp2
         /// </summary>
         public virtual void Resume()
         {
-
             _controllerStateManager.SetState(ProcessState.WORKING);
             _pauseSignalOn = false;
         }
+
         /// <summary>
         /// Waiting all job are processeв logic AND queue is empty
         /// specific for particular class implementation
@@ -150,6 +192,29 @@ namespace MTController2.Exp2
             await Task.Run(WaitAllFinished);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void _processItemBehavior_AddToQueue(object sender, AddToQueueEventArgs e)
+        {
+            _queue.Enqueue(e.Job);
+        }
+
+
+        public virtual void FillQueue(List<IJobInfo> jobs)
+        {
+            foreach (var job in jobs)
+            {
+                _queue.Enqueue(job);
+            }
+        }
+
+        public virtual void AddToQueue(IJobInfo job)
+        {
+            _queue.Enqueue(job);
+        }
     }
 
     public class AllFinishedEventArgs:EventArgs

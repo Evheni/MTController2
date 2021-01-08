@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,94 +27,108 @@ namespace WpfAppTest
     /// </summary>
     public partial class MainWindow : Window
     {
-
-
         DispatcherTimer timer = new DispatcherTimer();
        
-
-        QueueBasedController mt;
+        Controller mt;
         public MainWindow()
         {
             InitializeComponent();
 
+            //Create controller object passing job process behavior, number of threads to execute jobs, options to init controller
+            mt = new LimitedConcurrencyController //new JobWorkerController//
+                (
+                    new JobProcessBehaviorJustSleep(new JobProcessorOptions()),//options for particular item
+                    50,
+                    new ControllerOptions() //options for general controller processor (not for particular item)
+                );
+            // mt.AllFinished += Mt_AllFinished;
+
             timer.Tick += TimerTick;
-            timer.Interval = TimeSpan.FromSeconds(1);
+            timer.Interval = TimeSpan.FromMilliseconds(100);
             timer.Start();
 
         }
 
+        private void Mt_AllFinished(object sender, AllFinishedEventArgs e)
+        {
+            // UpdateStateLabel();
+        }
+
         private async void StartControllerAsync()
         {
-            int testQueueSize = 10000;
-
-            Stopwatch stopwatch = new Stopwatch();
-
-            //Init input job queue (which will be processed IN USING THE SAME BEHAVIOR)
-            List<IJobInfo> inputQueue = new List<IJobInfo>();
-            for (int i = 0; i < testQueueSize; i++)
+            try
             {
-                inputQueue.Add(new StringJobInfo(i.ToString()));
+                int testQueueSize = 20000;
+
+                mt.Init();
+
+                //Init input job queue (which will be processed IN USING THE SAME BEHAVIOR)
+                List<IJobInfo> inputQueue = new List<IJobInfo>();
+                for (int i = 0; i < testQueueSize; i++)
+                {
+                    inputQueue.Add(new StringJobInfo(i.ToString()));
+                }
+                Debug.WriteLine("Start filling queue to controller");
+                //Fill controller job queue
+                mt.FillQueue(inputQueue);
+
+                //Launch job execution by controller
+                mt.Launch();
+
+                // UpdateStateLabel();
+
+                mt.WaitAllFinished();
+                // UpdateStateLabel();
             }
-
-            //Create controller object passing job process behavior, number of threads to execute jobs, options to init controller
-            mt = new LimitedConcurrencyController //new JobWorkerController//
-                (
-                    new ProcessItemBehaviorJustSleep(new JobProcessorOptions()),//options for particular item
-                    50,
-                    new ControllerOptions() //options for general controller processor (not for particular item)
-                );
-
-            //Fill controller job queue
-            mt.FillQueue(inputQueue);
-
-            stopwatch.Start();
-
-            //Launch job execution by controller
-            mt.Launch();
-
-            //Wait for all jobs to be finished
-            //#? is that ok if we launch it from extra thread
-            mt.WaitAllFinished();
-
-            stopwatch.Stop();
-
-            Console.WriteLine($"{mt.GetType()} test: {stopwatch.ElapsedMilliseconds} ms");
-
+            catch (Exception exp)
+            {
+                // UpdateStateLabel(exp.Message);
+            }
+                
+           
+            
         }
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
-            Task.Factory.StartNew(StartControllerAsync);
+            Task t = Task.Factory.StartNew(StartControllerAsync);
+
         }
 
-        private async void StopControllerAsync()
-        {
-            mt.Stop();
-        }
+        //private async void StopControllerAsync()
+        //{
+        //    mt.Stop();
+        //    // UpdateStateLabel();
+        //}
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
-            Task.Factory.StartNew(StopControllerAsync);
+            mt.Stop();
+            // Task.Factory.StartNew(StopControllerAsync);
         }
-        private async void PauseControllerAsync()
+      
+        private void PauseButton_Click(object sender, RoutedEventArgs e)
         {
             mt.Pause();
         }
-        private void PauseButton_Click(object sender, RoutedEventArgs e)
-        {
-            Task.Factory.StartNew(PauseControllerAsync);
-        }
-        private async void ResumeControllerAsync()
-        {
-            mt.Resume();
-        }
+       
         private void ResumButton_Click(object sender, RoutedEventArgs e)
         {
-            Task.Factory.StartNew(ResumeControllerAsync);
+            mt.Resume();
         }
 
 
         private void TimerTick(object sender, EventArgs e)
         {
             InfoLabel.Content = mt?.ControllerState;
+            ResultLabel.Content = "Elements processed: " + mt?.ProcessInfo?.Results;
+            QueueLabel.Content = "Elements in queue: " + mt?.ProcessInfo?.ElementsInQueue;
         }
+
+        //private void UpdateStateLabel(string str="")
+        //{
+
+        //    Dispatcher.Invoke(new Action(() => {
+        //        InfoLabel.Content = (str=="") ? mt.ControllerState: str ;
+        //    }));
+        //}
     }
 }

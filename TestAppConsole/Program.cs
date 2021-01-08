@@ -28,9 +28,9 @@ namespace TestAppConsole
             }
 
             //Create controller object passing job process behavior, number of threads to execute jobs, options to init controller
-            QueueBasedController mt = new LimitedConcurrencyController //new JobWorkerController//
+            Controller mt = new LimitedConcurrencyController //new JobWorkerController//
                 (
-                    new ProcessItemBehaviorJustSleep(new JobProcessorOptions()),//options for particular item
+                    new JobProcessBehaviorJustSleep(new JobProcessorOptions()),//options for particular item
                     50,
                     new ControllerOptions() //options for general controller processor (not for particular item)
                 );

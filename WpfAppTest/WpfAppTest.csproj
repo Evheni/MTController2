@@ -10,4 +10,9 @@
     <ProjectReference Include="..\MTController2\MTController2.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\" />
+    <Folder Include="Model\" />
+  </ItemGroup>
+
 </Project>

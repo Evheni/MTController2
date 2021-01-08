@@ -1,6 +1,6 @@
 ﻿using MTController2.JobInfo;
 using MTController2.OptionClasses;
-using MTController2.ProcessItemBehaviorNS;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,16 +9,16 @@ using System.Threading.Tasks;
 
 namespace MTController2.Exp2
 {
-    public class ProcessItemBehaviorJustSleep : QueueBasedProcessItemBehavior
+    public class JobProcessBehaviorJustSleep : JobProcessBehavior
     {
-        public ProcessItemBehaviorJustSleep(Options options) : base(options)
+        public JobProcessBehaviorJustSleep(Options options) : base(options)
         {
         }
 
-        public override void Process(IJobInfo job) 
+        public override void ProcessSpecific(IJobInfo job) 
         {
             //await Task.Delay(10);
-            Thread.Sleep(10);
+            Thread.Sleep(1000);
             Console.WriteLine($"job {(job as StringJobInfo).Job} after sleep");
 
         }
