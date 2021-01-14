@@ -31,7 +31,7 @@ namespace MTController2.Exp2
         }
         public JobProcessBehavior(Options options)
         {
-            options = _options;
+            _options = options;
         }
 
         /// <summary>

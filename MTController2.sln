@@ -5,9 +5,7 @@ VisualStudioVersion = 16.0.30621.155
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MTController2", "MTController2\MTController2.csproj", "{4C93FBA7-46F9-427D-8E0B-1B8A1894896C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestAppConsole", "TestAppConsole\TestAppConsole.csproj", "{C0C45AD2-E795-4B51-A424-1796779638F1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfAppTest", "WpfAppTest\WpfAppTest.csproj", "{311EBA0F-AEDB-4B4E-A57B-DC85800D4BBD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfAppTest", "WpfAppTest\WpfAppTest.csproj", "{311EBA0F-AEDB-4B4E-A57B-DC85800D4BBD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,10 +17,6 @@ Global
 		{4C93FBA7-46F9-427D-8E0B-1B8A1894896C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4C93FBA7-46F9-427D-8E0B-1B8A1894896C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4C93FBA7-46F9-427D-8E0B-1B8A1894896C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C0C45AD2-E795-4B51-A424-1796779638F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C0C45AD2-E795-4B51-A424-1796779638F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C0C45AD2-E795-4B51-A424-1796779638F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C0C45AD2-E795-4B51-A424-1796779638F1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{311EBA0F-AEDB-4B4E-A57B-DC85800D4BBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{311EBA0F-AEDB-4B4E-A57B-DC85800D4BBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{311EBA0F-AEDB-4B4E-A57B-DC85800D4BBD}.Release|Any CPU.ActiveCfg = Release|Any CPU

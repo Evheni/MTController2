@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace MTController2.Exp2
 {
     /// <summary>
-    /// Class describing task processing behavior
+    /// Multithreaded managing of task queue processing
     /// e.g. managing queue with tasks (enqueue tasks, dequeue tasks),
     /// organizing multithreaded task processing
     /// </summary>
@@ -27,17 +27,7 @@ namespace MTController2.Exp2
         /// </summary>
         protected int _threadNumber;
 
-        /// <summary>
-        /// Cancellation token source used to stop the launched job
-        /// If job was stopped - it cannot be resumed from the same point
-        /// </summary>
-        protected CancellationTokenSource _stopCancellationTokenSource;
-        /// <summary>
-        /// flag used to pause the launched job
-        /// it can be later resumed from the same point
-        /// </summary>
-        protected bool _pauseSignalOn;
-
+      
         /// <summary>
         /// storing current controller state: INITIALIZATION, WORKING, STOPPING, PAUSED, PAUSING, DEINITIALIZATION
         /// </summary>
@@ -77,21 +67,6 @@ namespace MTController2.Exp2
         protected JobProcessBehavior _processItemBehavior;
 
         /// <summary>
-        /// counter to track number of items, which are being processed by threads right in the current moment
-        /// </summary>
-        protected int _currentlyProcessingItemCount;
-        /// <summary>
-        /// counter to track number of items, which processing is already paused considering _pauseSignalOn state
-        /// it helps to distinguish between PAUSING and PAUSED controller states
-        /// </summary>
-        protected int _pausedProcessingItemCount;
-
-        /// <summary>
-        /// locker to synchronize _pausedProcessingItemCount access
-        /// </summary>
-        protected object _pauseLockerObject = new object();
-
-        /// <summary>
         /// Initializes a new instance of Controller
         /// </summary>
         /// <param name="threadNumber">number of threads to process jobs simultaneously</param>
@@ -100,8 +75,7 @@ namespace MTController2.Exp2
         {
             _threadNumber = threadNumber;
             _options = options;
-            _stopCancellationTokenSource = new CancellationTokenSource();
-            _pauseSignalOn = false;
+            
             _controllerStateManager = new ControllerStateManager();
 
             _processItemBehavior = processItemBehavior;
@@ -113,73 +87,35 @@ namespace MTController2.Exp2
         }
 
         /// <summary>
-        /// Standard wrapper over initialization logic
+        /// Controller nitialization logic
         /// </summary>
-        public virtual void Init()
-        {
-            _controllerStateManager.SetState(ProcessState.INITIALIZATION);
-            InitSpecific();
-        }
+        public abstract void Init();
+
 
         /// <summary>
-        /// Initialization logic, specific for particular class implementation
+        /// Deinitialization logic
         /// </summary>
-        protected abstract void InitSpecific();
+        public abstract void Deinit();
 
         /// <summary>
-        /// Standard wrapper over deinitialization logic
+        /// Launch queue processing 
         /// </summary>
-        public virtual void Deinit()
-        {
-            _controllerStateManager.SetState(ProcessState.DEINITIALIZATION);
-            DeinitSpecific();
-        }
+        public abstract void Launch();
 
         /// <summary>
-        /// Deinitialization logic, specific for particular class implementation
+        /// Terminate processing (after termination process cannot be resumed, only restarted)
         /// </summary>
-        protected abstract void DeinitSpecific();
+        public abstract void Stop();
 
         /// <summary>
-        /// Standard wrapper over deinitialization logic
+        /// Pause processing  (after pausing process can be resumed)
         /// </summary>
-        public virtual void Launch()
-        {
-            LaunchSpecific();
-            _controllerStateManager.SetState(ProcessState.WORKING);
-        }
-
-        /// <summary>
-        /// Launch job logic, specific for particular class implementation
-        /// </summary>
-        protected abstract void LaunchSpecific();
-
-        /// <summary>
-        /// Standard stop processing logic
-        /// </summary>
-        public virtual void Stop()
-        {
-            _controllerStateManager.SetState(ProcessState.STOPPING);
-            _stopCancellationTokenSource.Cancel();
-        }
-
-        /// <summary>
-        /// Standard pause processing logic
-        /// </summary>
-        public virtual void Pause()
-        {
-            _controllerStateManager.SetState(ProcessState.PAUSING);
-            _pauseSignalOn = true;
-        }
+        public abstract void Pause();
 
         /// <summary>
         /// Standard resume processing logic
         /// </summary>
-        public virtual void Resume()
-        {
-            _controllerStateManager.SetState(ProcessState.WORKING);
-            _pauseSignalOn = false;
-        }
+        public abstract void Resume();
 
         /// <summary>
         /// Waiting all job are processeв logic AND queue is empty
@@ -217,14 +153,4 @@ namespace MTController2.Exp2
         }
     }
 
-    public class AllFinishedEventArgs:EventArgs
-    {
-        public bool IsSuccess { get; private set; }
-        public Exception Error { get; private set; }
-        public AllFinishedEventArgs(bool isSuccess, Exception exp = null)
-        {
-            IsSuccess = isSuccess;
-            Error = exp;
-        }
-    }
 }

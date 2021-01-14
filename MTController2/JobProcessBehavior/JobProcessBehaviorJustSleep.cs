@@ -18,7 +18,7 @@ namespace MTController2.Exp2
         public override void ProcessSpecific(IJobInfo job) 
         {
             //await Task.Delay(10);
-            Thread.Sleep(1000);
+            Thread.Sleep((_options as JobProcessorOptions).SomeInt);
             Console.WriteLine($"job {(job as StringJobInfo).Job} after sleep");
 
         }

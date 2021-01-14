@@ -27,21 +27,64 @@ namespace WpfAppTest
     /// </summary>
     public partial class MainWindow : Window
     {
+        int testQueueSize;
+        int threadNumber;
+        int sleepDuration;
+        
+        JobProcessorOptions jobProcessorOptions;
+
         DispatcherTimer timer = new DispatcherTimer();
        
         Controller mt;
+
+        void InitTest()
+        {
+            int mode = 3;
+            switch (mode)
+            {
+                case 0:
+                    testQueueSize = 20000;
+                    threadNumber = 10;
+                    sleepDuration = 1000;
+                    break;
+                case 1:
+                    testQueueSize = 20000;
+                    threadNumber = 1;
+                    sleepDuration = 1000;
+                    break;
+                case 2:
+                    testQueueSize = 20000;
+                    threadNumber = 2;
+                    sleepDuration = 1000;
+                    break;
+                case 3:
+                    testQueueSize = 20000;
+                    threadNumber = 50;
+                    sleepDuration = 1000;
+                    break;
+                default:
+                    break;
+            }
+        }
+
         public MainWindow()
         {
             InitializeComponent();
+            
+            InitTest();
+
+            jobProcessorOptions = new JobProcessorOptions(sleepDuration);
+
 
             //Create controller object passing job process behavior, number of threads to execute jobs, options to init controller
             mt = new LimitedConcurrencyController //new JobWorkerController//
                 (
-                    new JobProcessBehaviorJustSleep(new JobProcessorOptions()),//options for particular item
-                    50,
+                    new JobProcessBehaviorJustSleep(jobProcessorOptions),//options for particular item
+                    threadNumber,
                     new ControllerOptions() //options for general controller processor (not for particular item)
                 );
-            // mt.AllFinished += Mt_AllFinished;
+
+            DataContext = mt;
 
             timer.Tick += TimerTick;
             timer.Interval = TimeSpan.FromMilliseconds(100);
@@ -49,16 +92,17 @@ namespace WpfAppTest
 
         }
 
-        private void Mt_AllFinished(object sender, AllFinishedEventArgs e)
-        {
-            // UpdateStateLabel();
-        }
 
         private async void StartControllerAsync()
         {
             try
             {
-                int testQueueSize = 20000;
+               mt = new LimitedConcurrencyController //new JobWorkerController//
+               (
+                   new JobProcessBehaviorJustSleep(jobProcessorOptions),//options for particular item
+                   threadNumber,
+                   new ControllerOptions() //options for general controller processor (not for particular item)
+               );
 
                 mt.Init();
 
@@ -82,6 +126,7 @@ namespace WpfAppTest
             }
             catch (Exception exp)
             {
+                Debug.WriteLine(exp.Message);
                 // UpdateStateLabel(exp.Message);
             }
                 
@@ -94,41 +139,61 @@ namespace WpfAppTest
 
         }
 
-        //private async void StopControllerAsync()
-        //{
-        //    mt.Stop();
-        //    // UpdateStateLabel();
-        //}
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
-            mt.Stop();
+            try
+            {
+                mt.Stop();
+            }
+            catch (Exception exp)
+            {
+                Debug.WriteLine(exp.Message);
+            }
+            
             // Task.Factory.StartNew(StopControllerAsync);
         }
       
         private void PauseButton_Click(object sender, RoutedEventArgs e)
         {
-            mt.Pause();
+            try
+            {
+                mt.Pause();
+            }
+            catch (Exception exp)
+            {
+                Debug.WriteLine(exp.Message);
+            }
         }
        
         private void ResumButton_Click(object sender, RoutedEventArgs e)
         {
-            mt.Resume();
+            //mt.ProcessInfo.Results = 67;
+
+            try
+            {
+                mt.Resume();
+            }
+            catch (Exception exp)
+            {
+                Debug.WriteLine(exp.Message);
+            }
         }
 
 
         private void TimerTick(object sender, EventArgs e)
         {
             InfoLabel.Content = mt?.ControllerState;
-            ResultLabel.Content = "Elements processed: " + mt?.ProcessInfo?.Results;
+            ResultLabel.Text = "Elements processed: " + mt?.ProcessInfo?.Results;
             QueueLabel.Content = "Elements in queue: " + mt?.ProcessInfo?.ElementsInQueue;
         }
 
-        //private void UpdateStateLabel(string str="")
-        //{
+            //private void UpdateStateLabel(string str="")
+            //{
 
-        //    Dispatcher.Invoke(new Action(() => {
-        //        InfoLabel.Content = (str=="") ? mt.ControllerState: str ;
-        //    }));
-        //}
+            //    Dispatcher.Invoke(new Action(() => {
+            //        InfoLabel.Content = (str=="") ? mt.ControllerState: str ;
+            //    }));
+            //}
+       
     }
 }
