@@ -17,7 +17,6 @@
         <Button x:Name="ResumeButton" Content="Resume" Click="ResumButton_Click" HorizontalAlignment="Left" Margin="400,30,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.108,0.448"/>
         <Label x:Name="InfoLabel" Content="State" HorizontalAlignment="Left" Margin="478,30,0,0" VerticalAlignment="Top"/>
         <TextBlock x:Name="ResultLabel" Text="{Binding Path=ProcessInfo.Results, StringFormat='{}Results: {0}'}" HorizontalAlignment="Left" Margin="67,90,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="QueueLabel" HorizontalAlignment="Left" Margin="67,121,0,0" VerticalAlignment="Top"/>
-
-    </Grid>
+        <TextBlock x:Name="QueueLabel" Text="{Binding Path=ProcessInfo.ElementsInQueue, StringFormat='{}Elements in queue: {0}'}" HorizontalAlignment="Left" Margin="67,121,0,0" VerticalAlignment="Top"/>
+   </Grid>
 </Window>

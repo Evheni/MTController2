@@ -181,8 +181,6 @@ namespace WpfAppTestNet
         private void TimerTick(object sender, EventArgs e)
         {
             InfoLabel.Content = mt?.ControllerState;
-            // ResultLabel.Text = "Elements processed: " + mt?.ProcessInfo?.Results;
-            QueueLabel.Content = "Elements in queue: " + mt?.ProcessInfo?.ElementsInQueue;
         }
 
         //private void UpdateStateLabel(string str="")

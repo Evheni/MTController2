@@ -17,7 +17,17 @@ namespace MTController2.MultiThreadingController
             }
         }
 
-        public int ElementsInQueue;
+        private int _elementsInQueue;
+
+        public int ElementsInQueue
+        {
+            get { return _elementsInQueue; }
+            set { 
+                _elementsInQueue = value;
+                OnPropertyChanged();
+            }
+        }
+
         public int QueueElementProcessed;
 
         public ProcessInfo()
