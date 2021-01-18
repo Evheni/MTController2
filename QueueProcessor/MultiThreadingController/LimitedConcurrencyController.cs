@@ -88,6 +88,7 @@ namespace MTController2.Exp2
 
             while (_queue.Count>0 && !_stopCancellationTokenSource.IsCancellationRequested)
             {
+                HandlePause();
                 //Interlocked.Increment(ref _taskCounter);
                 lock (_currentProcessingItemLockerObject)
                 {
@@ -158,6 +159,8 @@ namespace MTController2.Exp2
 
         protected virtual void ProcessItem(IJobInfo job)
         {
+            HandlePause();
+
             lock (_currentProcessingItemLockerObject)
             {
                 _currentlyProcessingItemCount++;
@@ -179,8 +182,6 @@ namespace MTController2.Exp2
                 ProcessInfo.Results++;
                 Debug.WriteLine($"Thread {Thread.CurrentThread} _currentlyProcessingItemCount = {_currentlyProcessingItemCount}");
             }
-
-            HandlePause();
         }
 
         void HandlePause()
@@ -273,7 +274,7 @@ namespace MTController2.Exp2
 
         public override async void WaitAllFinishedAsync()
         {
-            await Task.Run(WaitAllFinished);
+            await Task.Run((Action) WaitAllFinished);
         }
 
 

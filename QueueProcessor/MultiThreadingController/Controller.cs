@@ -125,7 +125,7 @@ namespace MTController2.Exp2
 
         public virtual async void WaitAllFinishedAsync()
         {
-            await Task.Run(WaitAllFinished);
+            await Task.Run((Action) WaitAllFinished);
         }
 
         /// <summary>
